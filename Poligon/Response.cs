@@ -1,0 +1,1 @@
+public sealed record Response(int Code, string Message);
