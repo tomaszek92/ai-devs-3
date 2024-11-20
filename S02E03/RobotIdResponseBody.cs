@@ -1,0 +1,1 @@
+public sealed record RobotIdResponseBody(string Description);
