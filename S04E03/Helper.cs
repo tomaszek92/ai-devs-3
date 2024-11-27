@@ -2,23 +2,23 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using OpenAI.Chat;
 
-namespace S03E05;
+namespace S04E03;
 
 public static class Helper
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions =
-        new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
-
     public static async Task<string> AskAiAsync(this ChatClient chatClient, string question)
     {
         var response = await chatClient.CompleteChatAsync(question);
         return response.Value.Content[0].Text;
     }
 
-    public static async Task<T> AskAiAsync<T>(this ChatClient chatClient, string question)
+    public static async Task<T> AskAiAsync<T>(this ChatClient chatClient, string systemMessage, string userMessage)
     {
         var response = await chatClient.CompleteChatAsync(
-            [question],
+            [
+                ChatMessage.CreateSystemMessage(systemMessage),
+                ChatMessage.CreateUserMessage(userMessage)
+            ],
             new ChatCompletionOptions { ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat() });
 
         var json = response.Value.Content[0].Text;
@@ -28,29 +28,23 @@ public static class Helper
         return result;
     }
 
-    public static async Task<T[]> QueryDatabaseAsync<T>(string query)
+    public static async Task<Dictionary<string, string>> GetQuestionsAsync()
     {
         using var httpClient = new HttpClient();
-        var requestBody = new
-        {
-            task = "database",
-            apikey = new Guid(Environment.GetEnvironmentVariable("AIDEVS_KEY")!),
-            query,
-        };
-        using var httpResponseMessage = await httpClient.PostAsJsonAsync("https://centrala.ag3nts.org/apidb", requestBody);
-        var response = await httpResponseMessage.Content.ReadFromJsonAsync<QueryDatabaseResponse<T>>(_jsonSerializerOptions);
+        using var httpResponseMessage = await httpClient.GetAsync($"https://centrala.ag3nts.org/data/{Environment.GetEnvironmentVariable("AIDEVS_KEY")}/softo.json");
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<Dictionary<string, string>>();
 
-        return response!.Reply;
+        return response!;
     }
 
-   public static async Task PostAnswersAsync(string path)
+    public static async Task PostAnswersAsync(Dictionary<string, string> answers)
     {
         using var httpClient = new HttpClient();
         var requestBody = new
         {
-            task = "connections",
+            task = "softo",
             apikey = new Guid(Environment.GetEnvironmentVariable("AIDEVS_KEY")!),
-            answer = path,
+            answer = answers,
         };
         using var httpResponseMessage = await httpClient.PostAsJsonAsync("https://centrala.ag3nts.org/report", requestBody);
         var responseJson = await httpResponseMessage.Content.ReadAsStringAsync();
@@ -58,5 +52,3 @@ public static class Helper
         Console.WriteLine($"API response: {responseJson}");
     }
 }
-
-public sealed record QueryDatabaseResponse<T>(T[] Reply);

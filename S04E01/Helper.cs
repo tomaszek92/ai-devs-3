@@ -6,9 +6,6 @@ namespace S04E01;
 
 public static class Helper
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions =
-        new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
-
     public static async Task<string> AskAiAsync(this ChatClient chatClient, string question)
     {
         var response = await chatClient.CompleteChatAsync(question);
@@ -47,7 +44,7 @@ public static class Helper
             apikey = new Guid(Environment.GetEnvironmentVariable("AIDEVS_KEY")!),
             answer = message,
         };
-        var httpResponseMessage = await httpClient.PostAsJsonAsync("https://centrala.ag3nts.org/report", requestBody);
+        using var httpResponseMessage = await httpClient.PostAsJsonAsync("https://centrala.ag3nts.org/report", requestBody);
         var response = await httpResponseMessage.Content.ReadFromJsonAsync<ReportEndpointResponse>();
 
         Console.WriteLine($"Report API response: {response}");

@@ -37,7 +37,7 @@ public static class Helper
             apikey = new Guid(Environment.GetEnvironmentVariable("AIDEVS_KEY")!),
             query,
         };
-        var httpResponseMessage = await httpClient.PostAsJsonAsync($"https://centrala.ag3nts.org/{entity}", requestBody);
+        using var httpResponseMessage = await httpClient.PostAsJsonAsync($"https://centrala.ag3nts.org/{entity}", requestBody);
         var response = await httpResponseMessage.Content.ReadFromJsonAsync<CentralaResponse>();
 
         return response!.Message;
@@ -52,7 +52,7 @@ public static class Helper
             apikey = new Guid(Environment.GetEnvironmentVariable("AIDEVS_KEY")!),
             answer = city,
         };
-        var httpResponseMessage = await httpClient.PostAsJsonAsync("https://centrala.ag3nts.org/report", requestBody);
+        using var httpResponseMessage = await httpClient.PostAsJsonAsync("https://centrala.ag3nts.org/report", requestBody);
         var responseJson = await httpResponseMessage.Content.ReadAsStringAsync();
 
         Console.WriteLine($"API response: {responseJson}");
